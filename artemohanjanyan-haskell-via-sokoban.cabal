@@ -1,0 +1,29 @@
+cabal-version:      2.4
+name:               artemohanjanyan-haskell-via-sokoban
+version:            0.1.0.0
+
+author:             Artem Ohanjanyan
+maintainer:         artemohanjanyan@gmail.com
+
+common codeworld-executable
+    build-depends:    base ^>=4.12.0.0
+                    , codeworld-api ^>=0.7.0
+    hs-source-dirs:   app
+    default-language: Haskell2010
+    ghc-options:      -threaded -Wall
+
+executable traffic
+    import:           codeworld-executable
+    main-is:          Traffic.hs
+
+executable trees
+    import:           codeworld-executable
+    main-is:          Trees.hs
+
+executable sokoban
+    import:           codeworld-executable
+    main-is:          Sokoban.hs
+
+executable sketch
+    import:           codeworld-executable
+    main-is:          Sketch.hs
