@@ -8,6 +8,7 @@ maintainer:         artemohanjanyan@gmail.com
 common codeworld-executable
     build-depends:    base ^>=4.12.0.0
                     , codeworld-api ^>=0.7.0
+                    , random
     hs-source-dirs:   app
     default-language: Haskell2010
     ghc-options:      -threaded -Wall
@@ -27,3 +28,7 @@ executable sokoban
 executable sketch
     import:           codeworld-executable
     main-is:          Sketch.hs
+
+executable monad-sample
+    import:           codeworld-executable
+    main-is:          MonadSample.hs
