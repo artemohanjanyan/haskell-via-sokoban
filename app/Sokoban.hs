@@ -25,12 +25,49 @@ wall = horizontal & vertical & background
       polyline [(0.25, -0.25), (0.25, -0.5)]
     background =
       colored (rgb 161 149 85) (solidRectangle 1 1)
-ground = background
-  where
-    background =
-      colored (rgb 222 214 174) (solidRectangle 1 1)
+ground = colored (rgb 222 214 174) (solidRectangle 1 1)
 storage = colored (rgb 215 149 133) (solidCircle 0.125) & ground
-box =     colored (rgb 241 174 66) (solidRectangle 1 1)
+box =
+  square 0.5 &
+  square 0.35 &
+  polygon diagonal &
+  colored (dark color) (solidPolygon diagonal) &
+  colored (darker 0.25 color) (solidPolygon
+    [ (-0.35, -0.35)
+    , (-0.28, -0.28)
+    , (-0.28, 0.28)
+    , (0.28, 0.28)
+    , (0.35, 0.35)
+    , (-0.35, 0.35)
+    ]) &
+  colored (light color) (solidPolygon
+    [ (-0.35, -0.35)
+    , (-0.28, -0.42)
+    , (0.42, -0.42)
+    , (0.42, 0.28)
+    , (0.35, 0.35)
+    , (0.35, -0.35)
+    ]) &
+  colored (light color) (solidPolygon
+    [ (-0.43, -0.43)
+    , (-0.5, -0.5)
+    , (-0.5, 0.5)
+    , (0.5, 0.5)
+    , (0.43, 0.43)
+    , (-0.43, 0.43)
+    ]) &
+  colored color (solidRectangle 1 1)
+  where
+    color = rgb 241 174 66
+    square r = polygon [(-r, -r), (-r, r), (r, r), (r, -r)]
+    diagonal =
+      [ (-0.35, -0.35)
+      , (-0.35, -0.25)
+      , (0.25, 0.35)
+      , (0.35, 0.35)
+      , (0.35, 0.25)
+      , (-0.25, -0.35)
+      ]
 
 data Tile = Wall | Ground | Storage | Box | Blank
 
