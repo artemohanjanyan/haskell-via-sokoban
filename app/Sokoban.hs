@@ -70,6 +70,7 @@ box =
       ]
 
 data Tile = Wall | Ground | Storage | Box | Blank
+  deriving Eq
 
 drawTile :: Tile -> Picture
 drawTile Wall = wall
@@ -122,14 +123,29 @@ moveIfAvailable direction coord =
   where
     newCoord = move direction coord
 
-type State = (Coord, Direction)
+data State = State
+  { sPosition :: Coord
+  , sDirection :: Direction
+  , sBoxes :: [Coord]
+  }
+
+initialState :: State
+initialState = State (Coord 0 1) D boxes
+  where
+    boxes =
+      [ coord
+      | x <- [-10..10]
+      , y <- [-10..10]
+      , let coord = Coord x y
+      , maze coord == Box
+      ]
 
 handleEvent :: Event -> State -> State
-handleEvent (KeyPress key) (c, _)
-  | key == "Right" = (moveIfAvailable R c, R)
-  | key == "Up"    = (moveIfAvailable U c, U)
-  | key == "Left"  = (moveIfAvailable L c, L)
-  | key == "Down"  = (moveIfAvailable D c, D)
+handleEvent (KeyPress key) (State c _ _)
+  | key == "Right" = State (moveIfAvailable R c) R []
+  | key == "Up"    = State (moveIfAvailable U c) U []
+  | key == "Left"  = State (moveIfAvailable L c) L []
+  | key == "Down"  = State (moveIfAvailable D c) D []
 handleEvent _ c = c
 
 player :: Direction -> Picture
@@ -155,18 +171,41 @@ player direction = arms & body
         polyline [(0.1, -0.25), (0, 0)]
 
 drawState :: State -> Picture
-drawState (c, direction) = atCoord c (player direction) & pictureOfMaze
+drawState (State c direction _) = atCoord c (player direction) & pictureOfMaze
 
-resetableActivityOf
-  :: world
-  -> (Event -> world -> world)
-  -> (world -> Picture)
-  -> IO ()
-resetableActivityOf initialWorld handle draw =
-  activityOf initialWorld handle' draw
+data Activity state = Activity
+  state
+  (Event -> state -> state)
+  (state -> Picture)
+
+resetable :: Activity state -> Activity state
+resetable (Activity state0 handle draw) = Activity state0 handle' draw
   where
-    handle' (KeyPress "Esc") _ = initialWorld
-    handle' event world = handle event world
+    handle' (KeyPress "Esc") _ = state0
+    handle' event state = handle event state
+
+startScreen :: Picture
+startScreen = scaled 3 3 (lettering "Sokoban!")
+
+data StartScreenState state = StartScreen | Running state
+
+withStartScreen :: Activity state -> Activity (StartScreenState state)
+withStartScreen (Activity state0 handle draw) = Activity state0' handle' draw'
+  where
+    state0' = StartScreen
+
+    handle' (KeyPress " ") StartScreen = Running state0
+    handle' _              StartScreen = StartScreen
+    handle' e              (Running s) = Running (handle e s)
+
+    draw' StartScreen = startScreen
+    draw' (Running s) = draw s
+
+runActivity :: Activity state -> IO ()
+runActivity (Activity state0 handle draw) = activityOf state0 handle draw
+
+sokoban :: Activity State
+sokoban = Activity initialState handleEvent drawState
 
 main :: IO ()
-main = resetableActivityOf (initialCoord, D) handleEvent drawState
+main = runActivity (resetable (withStartScreen sokoban))
