@@ -2,6 +2,18 @@
 
 import CodeWorld
 
+-- Basic types --
+
+data Tile = Wall | Ground | Storage | Box | Blank
+  deriving Eq
+
+data Coord = Coord Int Int
+  deriving Eq
+
+data Direction = R | U | L | D
+
+-- Pictures --
+
 rgb :: Double -> Double -> Double -> Color
 rgb r g b = RGB (r / 256) (g / 256) (b / 256)
 
@@ -69,85 +81,6 @@ box =
       , (-0.25, -0.35)
       ]
 
-data Tile = Wall | Ground | Storage | Box | Blank
-  deriving Eq
-
-drawTile :: Tile -> Picture
-drawTile Wall = wall
-drawTile Ground = ground
-drawTile Storage = storage
-drawTile Box = box
-drawTile Blank = blank
-
-data Coord = Coord Int Int
-
-data Direction = R | U | L | D
-
-maze :: Coord -> Tile
-maze (Coord x y)
-  | abs x > 4  || abs y > 4  = Blank
-  | abs x == 4 || abs y == 4 = Wall
-  | x ==  2 && y <= 0        = Wall
-  | x ==  3 && y <= 0        = Storage
-  | x >= -2 && y == 0        = Box
-  | otherwise                = Ground
-
-atCoord :: Coord -> Picture -> Picture
-atCoord (Coord x y) = translated (fromIntegral x) (fromIntegral y)
-
-pictureOfMaze :: Picture
-pictureOfMaze = mconcat $ reverse tiles
-  where
-    tiles = [atCoord (Coord x y) (drawTile (maze (Coord x y)))
-      | x <- [-10..10]
-      , y <- [-10..10]
-      ]
-
-initialCoord :: Coord
-initialCoord = Coord 0 1
-
-move :: Direction -> Coord -> Coord
-move R (Coord x y) = Coord (x + 1)  y
-move U (Coord x y) = Coord  x      (y + 1)
-move L (Coord x y) = Coord (x - 1) y
-move D (Coord x y) = Coord  x      (y - 1)
-
-available :: Tile -> Bool
-available Ground = True
-available Storage = True
-available _ = False
-
-moveIfAvailable :: Direction -> Coord -> Coord
-moveIfAvailable direction coord =
-  if available $ maze newCoord then newCoord else coord
-  where
-    newCoord = move direction coord
-
-data State = State
-  { sPosition :: Coord
-  , sDirection :: Direction
-  , sBoxes :: [Coord]
-  }
-
-initialState :: State
-initialState = State (Coord 0 1) D boxes
-  where
-    boxes =
-      [ coord
-      | x <- [-10..10]
-      , y <- [-10..10]
-      , let coord = Coord x y
-      , maze coord == Box
-      ]
-
-handleEvent :: Event -> State -> State
-handleEvent (KeyPress key) (State c _ _)
-  | key == "Right" = State (moveIfAvailable R c) R []
-  | key == "Up"    = State (moveIfAvailable U c) U []
-  | key == "Left"  = State (moveIfAvailable L c) L []
-  | key == "Down"  = State (moveIfAvailable D c) D []
-handleEvent _ c = c
-
 player :: Direction -> Picture
 player direction = arms & body
   where
@@ -170,8 +103,115 @@ player direction = arms & body
         polyline [(-0.1, -0.25), (0, 0)] &
         polyline [(0.1, -0.25), (0, 0)]
 
+-- Maze --
+
+maze :: Coord -> Tile
+maze (Coord x y)
+  | abs x > 4  || abs y > 4  = Blank
+  | abs x == 4 || abs y == 4 = Wall
+  | x ==  2 && y <= 0        = Wall
+  | x ==  3 && y <= 0        = Storage
+  | x >= -2 && y == 0        = Box
+  | otherwise                = Ground
+
+noBoxMaze :: Coord -> Tile
+noBoxMaze coord = if tile == Box then Ground else tile
+  where
+    tile = maze coord
+
+mazeWithBoxes :: [Coord] -> (Coord -> Tile)
+mazeWithBoxes boxes coord =
+  if any (== coord) boxes
+    then Box
+    else noBoxMaze coord
+
+-- Drawing --
+
+drawTile :: Tile -> Picture
+drawTile Wall = wall
+drawTile Ground = ground
+drawTile Storage = storage
+drawTile Box = box
+drawTile Blank = blank
+
+atCoord :: Coord -> Picture -> Picture
+atCoord (Coord x y) = translated (fromIntegral x) (fromIntegral y)
+
+coords :: [Coord]
+coords = [Coord x y | x <- [-10..10], y <- [-10..10]]
+
+pictureOfMaze :: Picture
+pictureOfMaze = mconcat (reverse tiles)
+  where
+    tiles = [atCoord coord (drawTile (noBoxMaze coord)) | coord <- coords]
+
+pictureOfBoxes :: [Coord] -> Picture
+pictureOfBoxes boxes = mconcat $ map (`atCoord` box) boxes
+
+-- Moving --
+
+move :: Direction -> Coord -> Coord
+move R (Coord x y) = Coord (x + 1)  y
+move U (Coord x y) = Coord  x      (y + 1)
+move L (Coord x y) = Coord (x - 1) y
+move D (Coord x y) = Coord  x      (y - 1)
+
+available :: Tile -> Bool
+available Ground = True
+available Storage = True
+available _ = False
+
+-- State --
+
+data State = State
+  { sPosition :: Coord
+  , sDirection :: Direction
+  , sBoxes :: [Coord]
+  }
+
+initialState :: State
+initialState = State (Coord 0 1) D boxes
+  where
+    boxes = filter (\coord -> maze coord == Box) coords
+
+handleEvent :: Event -> State -> State
+handleEvent (KeyPress key) s
+  | key == "Right" = handle R
+  | key == "Up"    = handle U
+  | key == "Left"  = handle L
+  | key == "Down"  = handle D
+  where
+    handle direction = newS { sDirection = direction }
+      where
+        position' = move direction (sPosition s)
+        position'' = move direction position'
+        moveBox coord = if coord == position' then position'' else coord
+
+        newS =
+          if isWon s
+            then s
+            else if available (mazeWithBoxes (sBoxes s) position')
+              then s { sPosition = position' }
+              else if (any (== position') (sBoxes s) &&
+                       available (mazeWithBoxes (sBoxes s) position''))
+                then s
+                  { sPosition = position'
+                  , sBoxes = map moveBox (sBoxes s)
+                  }
+                else s
+handleEvent _ c = c
+
 drawState :: State -> Picture
-drawState (State c direction _) = atCoord c (player direction) & pictureOfMaze
+drawState s =
+  (if isWon s then scaled 3 3 (lettering "Haskell!") else blank) &
+  atCoord (sPosition s) (player (sDirection s)) &
+  pictureOfBoxes (sBoxes s) &
+  pictureOfMaze
+
+isWon :: State -> Bool
+isWon s = all ((== Storage) . noBoxMaze) (sBoxes s)
+
+-- Activity --
 
 data Activity state = Activity
   state
@@ -203,6 +243,8 @@ withStartScreen (Activity state0 handle draw) = Activity state0' handle' draw'
 
 runActivity :: Activity state -> IO ()
 runActivity (Activity state0 handle draw) = activityOf state0 handle draw
+
+-- Main --
 
 sokoban :: Activity State
 sokoban = Activity initialState handleEvent drawState
