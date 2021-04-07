@@ -32,3 +32,15 @@ executable sketch
 executable monad-sample
     import:           codeworld-executable
     main-is:          MonadSample.hs
+
+common lecture-executable
+    import:           codeworld-executable
+    hs-source-dirs:   lecture
+
+executable sokoban-solution-solved
+    import:           lecture-executable
+    main-is:          SokobanSolutionSolved.hs
+
+executable sokoban-solution
+    import:           lecture-executable
+    main-is:          SokobanSolution.hs
