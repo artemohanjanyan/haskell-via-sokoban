@@ -9,38 +9,34 @@ common codeworld-executable
     build-depends:    base ^>=4.12.0.0
                     , codeworld-api ^>=0.7.0
                     , random
-    hs-source-dirs:   app
     default-language: Haskell2010
     ghc-options:      -threaded -Wall
 
+common lec2
+    import:           codeworld-executable
+    hs-source-dirs:   lec2
 executable traffic
-    import:           codeworld-executable
+    import:           lec2
     main-is:          Traffic.hs
-
 executable trees
-    import:           codeworld-executable
+    import:           lec2
     main-is:          Trees.hs
-
 executable sokoban
-    import:           codeworld-executable
+    import:           lec2
     main-is:          Sokoban.hs
-
 executable sketch
-    import:           codeworld-executable
+    import:           lec2
     main-is:          Sketch.hs
-
 executable monad-sample
-    import:           codeworld-executable
+    import:           lec2
     main-is:          MonadSample.hs
 
-common lecture-executable
+common lec3
     import:           codeworld-executable
-    hs-source-dirs:   lecture
-
+    hs-source-dirs:   lec3
 executable sokoban-solution-solved
-    import:           lecture-executable
+    import:           lec3
     main-is:          SokobanSolutionSolved.hs
-
 executable sokoban-solution
-    import:           lecture-executable
+    import:           lec3
     main-is:          SokobanSolution.hs
