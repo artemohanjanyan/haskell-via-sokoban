@@ -1,26 +1,60 @@
 {-# LANGUAGE OverloadedStrings #-}
 import CodeWorld
 
+-- import Prelude hiding ((==))
+
+-- import Data.Fixed (mod')
+-- import qualified Data.Fixed
+
 -- Lists
 
 data List a = Empty | Entry a (List a)
+  deriving (Eq, Show)
+
+instance Semigroup (List a) where
+  (<>) = appendList
+
+instance Monoid (List a) where
+  mempty = Empty
+
+-- instance Eq a => Eq (List a) where
+--   Empty == Empty = True
+--   (Entry x xs) == (Entry y ys) = x == y && xs == ys
+--   _ == _ = False
 
 mapList :: (a -> b) -> List a -> List b
 mapList _ Empty = Empty
 mapList f (Entry c cs) = Entry (f c) (mapList f cs)
 
-combine :: List Picture -> Picture
-combine Empty = blank
-combine (Entry p ps) = p & combine ps
+combine :: Monoid a => List a -> a
+combine Empty = mempty
+combine (Entry p ps) = p <> combine ps
+
+appendList :: List a -> List a -> List a
+appendList Empty ys = ys
+appendList (Entry x xs) ys = x `Entry` appendList xs ys
+
+containsList :: Eq a => a -> List a -> Bool
+containsList _ Empty = False
+containsList x (Entry y ys) = x == y || containsList x ys
+
+allList :: List Bool -> Bool
+-- allList bools = not (containsList (==) False bools)
+allList = not . containsList False
 
 -- Coordinates
 
 data Coord = C Integer Integer
+  deriving (Eq, Show)
+
+-- Type wrapper without any runtime overhead
+-- newtype Coord' = Coord' Coord
+
+-- Type synonym, doesn't actually create a different type
+-- type Coord'' = (Integer, Integer)
 
 data Direction = R | U | L | D
-
-eqCoord :: Coord -> Coord -> Bool
-eqCoord = undefined
+  deriving Eq
 
 adjacentCoord :: Direction -> Coord -> Coord
 adjacentCoord R (C x y) = C (x+1) y
@@ -28,19 +62,47 @@ adjacentCoord U (C x y) = C  x   (y+1)
 adjacentCoord L (C x y) = C (x-1) y
 adjacentCoord D (C x y) = C  x   (y-1)
 
+traverseCoords :: Monoid a => (Coord -> a) -> a
+traverseCoords f =
+  go21times (\r ->
+    go21times (\c ->
+      f (C r c)
+    )
+  )
+  where
+    go21times something = go (-10)
+      where
+        go 11 = mempty
+        go n  = something n <> go (n+1)
+
 -- The state
 
-data State = State -- FIXME!
+--data State = State Coord Direction (List Coord)
+--  deriving Eq
+
+data State = State
+  { sPosition :: Coord
+  , sDirection :: Direction
+  , sBoxes :: List Coord
+  } deriving Eq
 
 initialBoxes :: List Coord
-initialBoxes = undefined
+initialBoxes = traverseCoords $ \c -> 
+  if maze c == Box
+    then Entry c Empty
+    else Empty
 
 initialState :: State
-initialState = State -- FIXME!
+initialState = State
+  { sPosition = C 1 1
+  , sDirection = U
+  , sBoxes = initialBoxes
+  }
 
 -- The maze
 
 data Tile = Wall | Ground | Storage | Box | Blank
+  deriving Eq
 
 maze :: Coord -> Tile
 maze (C x y)
@@ -52,40 +114,55 @@ maze (C x y)
   | otherwise                = Ground
 
 noBoxMaze :: Coord -> Tile
-noBoxMaze = undefined
+noBoxMaze coord =
+  let tile = maze coord
+  in if tile == Box then Ground else tile
 
 mazeWithBoxes :: List Coord -> Coord -> Tile
-mazeWithBoxes = undefined
+mazeWithBoxes boxes coord
+  | containsList coord boxes = Box
+  | otherwise = noBoxMaze coord
 
 -- Event handling
 
 handleEvent :: Event -> State -> State
---handleEvent (KeyPress key) c
---  | key == "Right" = tryGoTo c R
---  | key == "Up"    = tryGoTo c U
---  | key == "Left"  = tryGoTo c L
---  | key == "Down"  = tryGoTo c D
---  where
---    tryGoTo :: State -> Direction -> State
---    tryGoTo (State from _) d
---      | isOk (maze to) = State to d
---      | otherwise      = State from d
---      where to = adjacentCoord d from
---
---    isOk :: Tile -> Bool
---    isOk Ground = True
---    isOk Storage = True
---    isOk _ = False
+handleEvent _ state | isWon state = state
+handleEvent (KeyPress key) s@(State position _ boxes)
+  | key == "Right" = go R
+  | key == "Up"    = go U
+  | key == "Left"  = go L
+  | key == "Down"  = go D
+  where
+    go :: Direction -> State
+    go direction =
+      let position' = adjacentCoord direction position
+          position'' = adjacentCoord direction position'
+
+          maze' = mazeWithBoxes boxes
+
+          move coord = if coord == position' then position'' else coord
+          movedBoxes = mapList move boxes
+
+          newS = 
+            if isOk (maze' position')
+              then s { sPosition = position' }
+            else if maze' position' == Box && isOk (maze' position'')
+              then s { sPosition = position', sBoxes = movedBoxes }
+            else
+              s
+      in newS { sDirection = direction }
+
+    isOk :: Tile -> Bool
+    isOk Ground = True
+    isOk Storage = True
+    isOk _ = False
 handleEvent _ c = c
 
 isWon :: State -> Bool
-isWon = undefined
+isWon (State _ _ boxes) = allList (mapList isOnStorage boxes)
 
 isOnStorage :: Coord -> Bool
-isOnStorage = undefined
-
-allList :: List Bool -> Bool
-allList = undefined
+isOnStorage coord = maze coord == Storage
 
 -- Drawing
 
@@ -164,22 +241,13 @@ drawTile Box     = box
 drawTile Blank   = blank
 
 pictureOfMaze :: Picture
-pictureOfMaze = draw21times (\r -> draw21times (\c -> drawTileAt (C r c)))
-  where
-    draw21times :: (Integer -> Picture) -> Picture
-    draw21times something = go (-10)
-      where
-        go :: Integer -> Picture
-        go 11 = blank
-        go n  = something n & go (n+1)
+pictureOfMaze = traverseCoords drawTileAt
 
 drawTileAt :: Coord -> Picture
-drawTileAt c = atCoord c (drawTile (maze c))
-
+drawTileAt c = atCoord c (drawTile (noBoxMaze c))
 
 atCoord :: Coord -> Picture -> Picture
 atCoord (C x y) pic = translated (fromIntegral x) (fromIntegral y) pic
-
 
 player :: Direction -> Picture
 player R = translated 0 0.3 cranium
@@ -211,8 +279,15 @@ player D = translated 0 0.3 cranium
 pictureOfBoxes :: List Coord -> Picture
 pictureOfBoxes cs = combine (mapList (\c -> atCoord c (drawTile Box)) cs)
 
+winScreen :: Picture
+winScreen = scaled 3 3 (lettering "Haskell!")
+
 drawState :: State -> Picture
-drawState State = pictureOfMaze
+drawState state@(State position direction boxes) =
+  (if isWon state then winScreen else blank) &
+  atCoord position (player direction) &
+  pictureOfBoxes boxes &
+  pictureOfMaze
 
 -- The complete activity
 
@@ -222,10 +297,9 @@ sokoban = Activity initialState handleEvent drawState
 -- The general activity type
 
 data Activity world = Activity
-        world
-        (Event -> world -> world)
-        (world -> Picture)
-
+  world
+  (Event -> world -> world)
+  (world -> Picture)
 
 runActivity :: Activity s -> IO ()
 runActivity (Activity state0 handle draw)
@@ -259,8 +333,27 @@ withStartScreen (Activity state0 handle draw)
     draw' StartScreen = startScreen
     draw' (Running s) = draw s
 
+-- Activities with undo
+
+data WithUndo a = WithUndo a (List a)
+
+withUndo :: Eq a => Activity a -> Activity (WithUndo a)
+withUndo (Activity state0 handle draw) =
+  Activity state0' handle' draw'
+  where
+    state0' = WithUndo state0 Empty
+
+    draw' (WithUndo s _) = draw s
+
+    handle' (KeyPress key) state@(WithUndo _ stack) | key == "U" =
+      case stack of
+        Empty -> state
+        (Entry s' stack') -> WithUndo s' stack'
+    handle' e state@(WithUndo s stack) =
+      let newS = handle e s
+      in if newS == s then state else WithUndo newS (Entry s stack)
 
 -- The main function
 
 main :: IO ()
-main = runActivity sokoban
+main = runActivity (resetable (withStartScreen (withUndo sokoban)))
