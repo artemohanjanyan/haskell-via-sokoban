@@ -45,4 +45,4 @@ executable multi-sokoban
     import:           codeworld-executable
     hs-source-dirs:   lec4
     main-is:          Main.hs
-    other-modules:    List, Core, Pictures, Activity, State, Drawing
+    other-modules:    List, Core, Pictures, Activity, State, Drawing, Mazes

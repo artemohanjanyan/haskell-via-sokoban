@@ -30,6 +30,13 @@ traverseCoords f =
 data Tile = Wall | Ground | Storage | Box | Blank
   deriving Eq
 
+type Maze = Coord -> Tile
+
+data Level = Level
+  { lStart :: Coord
+  , lMaze :: Maze
+  }
+
 maze :: Coord -> Tile
 maze (C x y)
   | abs x > 4  || abs y > 4  = Blank
