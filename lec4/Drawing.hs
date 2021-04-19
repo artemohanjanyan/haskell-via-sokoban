@@ -16,11 +16,11 @@ drawTile Storage = storage
 drawTile Box     = box
 drawTile Blank   = blank
 
-pictureOfMaze :: Picture
-pictureOfMaze = traverseCoords drawTileAt
+pictureOfMaze :: Maze -> Picture
+pictureOfMaze maze = traverseCoords (drawTileAt maze)
 
-drawTileAt :: Coord -> Picture
-drawTileAt c = atCoord c (drawTile (noBoxMaze c))
+drawTileAt :: Maze -> Coord -> Picture
+drawTileAt maze c = atCoord c (drawTile (noBoxMaze maze c))
 
 atCoord :: Coord -> Picture -> Picture
 atCoord (C x y) pic = translated (fromIntegral x) (fromIntegral y) pic
@@ -32,8 +32,7 @@ winScreen :: Picture
 winScreen = scaled 3 3 (lettering "Haskell!")
 
 drawState :: State -> Picture
-drawState state@(State position direction boxes) =
-  (if isWon state then winScreen else blank) &
-  atCoord position (player direction) &
-  pictureOfBoxes boxes &
-  pictureOfMaze
+drawState state =
+  atCoord (sPosition state) (player (sDirection state)) &
+  pictureOfBoxes (sBoxes state) &
+  pictureOfMaze (stateMaze state)

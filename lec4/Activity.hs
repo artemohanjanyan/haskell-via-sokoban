@@ -30,7 +30,7 @@ startScreen = scaled 3 3 (lettering "Sokoban!")
 
 data SSState world = StartScreen | Running world
 
-withStartScreen :: Activity s  -> Activity (SSState s)
+withStartScreen :: Activity s -> Activity (SSState s)
 withStartScreen (Activity state0 handle draw)
   = Activity state0' handle' draw'
   where

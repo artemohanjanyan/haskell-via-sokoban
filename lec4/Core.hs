@@ -50,21 +50,12 @@ isClosed level = startIsGood && isGraphClosed (lStart level) adjacent isOk
 
     directions = R `Entry` U `Entry` L `Entry` D `Entry` Empty
 
-maze :: Coord -> Tile
-maze (C x y)
-  | abs x > 4  || abs y > 4  = Blank
-  | abs x == 4 || abs y == 4 = Wall
-  | x ==  2 && y <= 0        = Wall
-  | x ==  3 && y <= 0        = Storage
-  | x >= -2 && y == 0        = Box
-  | otherwise                = Ground
-
-noBoxMaze :: Coord -> Tile
-noBoxMaze coord =
+noBoxMaze :: Maze -> Maze
+noBoxMaze maze coord =
   let tile = maze coord
   in if tile == Box then Ground else tile
 
-mazeWithBoxes :: List Coord -> Coord -> Tile
-mazeWithBoxes boxes coord
+mazeWithBoxes :: Maze -> List Coord -> Maze
+mazeWithBoxes maze boxes coord
   | containsList coord boxes = Box
-  | otherwise = noBoxMaze coord
+  | otherwise = noBoxMaze maze coord
