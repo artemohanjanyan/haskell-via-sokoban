@@ -37,6 +37,19 @@ data Level = Level
   , lMaze :: Maze
   }
 
+isClosed :: Level -> Bool
+isClosed level = startIsGood && isGraphClosed (lStart level) adjacent isOk
+  where
+    startTile = lMaze level (lStart level)
+    startIsGood = startTile == Ground || startTile == Storage
+
+    adjacent x =
+      filterList ((/= Wall) . lMaze level)
+      (mapList (`adjacentCoord` x) directions)
+    isOk x = lMaze level x /= Blank
+
+    directions = R `Entry` U `Entry` L `Entry` D `Entry` Empty
+
 maze :: Coord -> Tile
 maze (C x y)
   | abs x > 4  || abs y > 4  = Blank
