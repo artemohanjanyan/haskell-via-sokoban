@@ -5,50 +5,25 @@ version:            0.1.0.0
 author:             Artem Ohanjanyan
 maintainer:         artemohanjanyan@gmail.com
 
-common codeworld-executable
+
+executable sokoban
+    hs-source-dirs:   app
+    main-is:          Main.hs
     build-depends:    base ^>=4.12.0.0
                     , codeworld-api ^>=0.7.0
-                    , random
-    default-language: Haskell2010
+                    , artemohanjanyan-haskell-via-sokoban
     ghc-options:      -threaded -Wall
 
-common lec2
-    import:           codeworld-executable
-    hs-source-dirs:   lec2
-executable traffic
-    import:           lec2
-    main-is:          Traffic.hs
-executable trees
-    import:           lec2
-    main-is:          Trees.hs
-executable sokoban
-    import:           lec2
-    main-is:          Sokoban.hs
-executable sketch
-    import:           lec2
-    main-is:          Sketch.hs
-executable monad-sample
-    import:           lec2
-    main-is:          MonadSample.hs
-
-common lec3
-    import:           codeworld-executable
-    hs-source-dirs:   lec3
-executable sokoban-solution-solved
-    import:           lec3
-    main-is:          SokobanSolutionSolved.hs
-executable sokoban-solution
-    import:           lec3
-    main-is:          SokobanSolution.hs
-
-executable multi-sokoban
-    import:           codeworld-executable
-    hs-source-dirs:   lec4
-    main-is:          Main.hs
-    other-modules:    List
+library
+    hs-source-dirs:   lib
+    exposed-modules:  List
                     , Core
                     , Pictures
                     , Activity
                     , State
                     , Drawing
                     , Mazes
+    build-depends:    base ^>=4.12.0.0
+                    , codeworld-api ^>=0.7.0
+    default-language: Haskell2010
+    ghc-options:      -threaded -Wall
