@@ -1,30 +1,27 @@
 cabal-version:      2.4
-name:               artemohanjanyan-haskell-via-sokoban
+name:               sokoban-codeworld
 version:            0.1.0.0
 
 author:             Artem Ohanjanyan
 maintainer:         artemohanjanyan@gmail.com
 
-
-executable sokoban
+executable sokoban-codeworld
     hs-source-dirs:   app
     main-is:          Main.hs
     build-depends:    base ^>=4.12.0.0
                     , codeworld-api ^>=0.7.0
-                    , artemohanjanyan-haskell-via-sokoban
+                    , sokoban-codeworld
+                    , sokoban-common
     ghc-options:      -threaded -Wall
     default-language: Haskell2010
 
 library
     hs-source-dirs:   lib
-    exposed-modules:  List
-                    , Core
-                    , Pictures
+    exposed-modules:  Pictures
                     , Activity
-                    , State
                     , Drawing
-                    , Mazes
     build-depends:    base ^>=4.12.0.0
                     , codeworld-api ^>=0.7.0
+                    , sokoban-common
     ghc-options:      -Wall
     default-language: Haskell2010

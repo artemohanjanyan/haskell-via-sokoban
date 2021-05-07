@@ -1,0 +1,16 @@
+cabal-version:      2.4
+name:               sokoban-common
+version:            0.1.0.0
+
+author:             Artem Ohanjanyan
+maintainer:         artemohanjanyan@gmail.com
+
+library
+    hs-source-dirs:   lib
+    exposed-modules:  List
+                    , Core
+                    , State
+                    , Mazes
+    build-depends:    base ^>=4.12.0.0
+    ghc-options:      -Wall
+    default-language: Haskell2010
