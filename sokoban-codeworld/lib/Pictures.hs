@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Pictures
   ( wall
   , ground
@@ -5,6 +7,8 @@ module Pictures
   , box
 
   , player
+
+  , startScreen
   ) where
 
 import CodeWorld
@@ -104,3 +108,6 @@ player D = translated 0 0.3 cranium
   where cranium = circle 0.18
                 & translated   0.06  0.08 (solidCircle 0.04)
                 & translated (-0.06) 0.08 (solidCircle 0.04)
+
+startScreen :: Picture
+startScreen = scaled 3 3 (lettering "Sokoban!")

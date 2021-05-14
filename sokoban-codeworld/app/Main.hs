@@ -6,6 +6,7 @@ import Core
 import Activity
 import State
 import Drawing
+import Pictures
 
 handleEvent :: Event -> Maybe State -> Maybe State
 handleEvent _ Nothing = Nothing
@@ -30,8 +31,14 @@ drawMaybeState :: Maybe State -> Picture
 drawMaybeState Nothing = winScreen
 drawMaybeState (Just state) = drawState state
 
-sokoban :: Activity (Maybe State)
+sokoban :: Activity Event Picture (Maybe State)
 sokoban = Activity firstLevelState handleEvent drawMaybeState
 
 main :: IO ()
-main = runActivity (resetable (withStartScreen (withUndo sokoban)))
+main = activityOf start' handle' draw'
+  where
+    Activity start' handle' draw' =
+      resettable (KeyPress "Esc") $
+      withStartScreen (KeyPress " ") startScreen $
+      withUndo (KeyPress "U") $
+      sokoban

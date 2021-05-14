@@ -17,9 +17,8 @@ executable sokoban-codeworld
 
 library
     hs-source-dirs:   lib
-    exposed-modules:  Pictures
-                    , Activity
-                    , Drawing
+    exposed-modules:  Drawing
+                    , Pictures
     build-depends:    base ^>=4.12.0.0
                     , codeworld-api ^>=0.7.0
                     , sokoban-common

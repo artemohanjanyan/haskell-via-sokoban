@@ -7,10 +7,11 @@ maintainer:         artemohanjanyan@gmail.com
 
 library
     hs-source-dirs:   lib
-    exposed-modules:  List
+    exposed-modules:  Activity
                     , Core
-                    , State
+                    , List
                     , Mazes
+                    , State
     build-depends:    base ^>=4.12.0.0
     ghc-options:      -Wall
     default-language: Haskell2010
