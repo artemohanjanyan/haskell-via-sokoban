@@ -1,0 +1,21 @@
+cabal-version:      2.4
+name:               hw7
+version:            0.1.0.0
+author:             Artem Ohanjanyan
+maintainer:         artemo@wix.com
+
+executable hw7
+    main-is:          Main.hs
+    build-depends:    base ^>=4.12.0.0
+                    , hw7
+                    , random
+    hs-source-dirs:   app
+    default-language: Haskell2010
+
+library
+    hs-source-dirs:   lib
+    exposed-modules:  Stream
+                    , Supply
+    build-depends:    base ^>=4.12.0.0
+    ghc-options:      -Wall
+    default-language: Haskell2010

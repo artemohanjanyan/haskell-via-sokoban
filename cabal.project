@@ -2,5 +2,6 @@ packages:
   sokoban-common/
   sokoban-codeworld/
   hw5/
+  hw7/
 
 with-compiler: ghc-8.6
