@@ -3,5 +3,6 @@ packages:
   sokoban-codeworld/
   hw5/
   hw7/
+  hw8/
 
 with-compiler: ghc-8.6

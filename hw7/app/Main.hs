@@ -20,16 +20,19 @@ runRand r = do
     return $ evalSupply r diceRolls
 
 averageOfTwo :: Rand Double
-averageOfTwo = do
+averageOfTwo =
+  do
     d1 <- get
     d2 <- get
     return $ fromIntegral (d1 + d2) / 2
+  -- (\d1 d2 -> fromIntegral (d1 + d2) / 2) <$> get <*> get
 
 bestOutOfTwo :: Rand Double
-bestOutOfTwo = do
-    d1 <- get
-    d2 <- get
-    return $ fromIntegral $ if (d1 > d2) then d1 else d2
+bestOutOfTwo = -- do
+    --d1 <- get
+    --d2 <- get
+    --return $ fromIntegral $ if (d1 > d2) then d1 else d2
+    (\a b -> fromIntegral $ max a b) <$> get <*> get
 
 -- Look, ma, I’m recursive!
 sumUntilOne :: Rand Double
