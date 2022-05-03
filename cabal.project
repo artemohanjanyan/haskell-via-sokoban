@@ -1,6 +1,7 @@
 packages:
   sokoban-common/
   sokoban-codeworld/
+  sokoban-terminal/
   hw5/
   hw7/
   hw8/

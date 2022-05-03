@@ -18,7 +18,7 @@ traverseCoords :: Monoid a => (Coord -> a) -> a
 traverseCoords f =
   go21times (\r ->
     go21times (\c ->
-      f (C r c)
+      f (C c r)
     )
   )
   where

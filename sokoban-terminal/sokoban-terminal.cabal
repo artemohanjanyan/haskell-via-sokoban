@@ -1,0 +1,23 @@
+cabal-version:      2.4
+name:               sokoban-terminal
+version:            0.1.0.0
+
+author:             Artem Ohanjanyan
+maintainer:         artemo@wix.com
+
+executable sokoban-terminal
+    hs-source-dirs:   app
+    main-is:          Main.hs
+    build-depends:    base ^>=4.12.0.0
+                    , sokoban-common
+                    , sokoban-terminal
+    ghc-options:      -threaded -Wall
+    default-language: Haskell2010
+
+library
+    hs-source-dirs:   lib
+    exposed-modules:  Drawing
+    build-depends:    base ^>=4.12.0.0
+                    , sokoban-common
+    ghc-options:      -Wall
+    default-language: Haskell2010
