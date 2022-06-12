@@ -3,38 +3,27 @@ module Main where
 import Data.Function (fix)
 import System.IO (hReady, hSetBuffering, stdin, stdout, BufferMode (NoBuffering))
 
-import Core
 import Activity
-import State
 import Drawing
+import Sokoban
 
 type Event = String
 
-handleEvent :: Event -> Maybe State -> Maybe State
-handleEvent _ Nothing = Nothing
-handleEvent event (Just state)
-  | event == "\ESC[C" = f R
-  | event == "\ESC[A" = f U
-  | event == "\ESC[D" = f L
-  | event == "\ESC[B" = f D
-  | event == "n"      = nextLevel state
-  where
-    f direction =
-      let newState = movePlayer direction state in
-      if isLevelComplete newState
-        then nextLevel newState
-        else (Just newState)
-handleEvent _ s = s
-
-firstLevelState :: Maybe State
-firstLevelState = Just (initialState 1)
-
-drawMaybeState :: Maybe State -> Picture
-drawMaybeState Nothing = winScreen
-drawMaybeState (Just state) = drawState state
-
-sokoban :: Activity Event Picture (Maybe State)
-sokoban = Activity firstLevelState handleEvent drawMaybeState
+config :: Config Event Picture
+config = Config
+  { cEventUp = "\ESC[A"
+  , cEventDown = "\ESC[B"
+  , cEventLeft = "\ESC[D"
+  , cEventRight = "\ESC[C"
+  , cDrawState = drawState
+  , cEventUndo = "u"
+  , cEventReset = "\ESC"
+  , cEventStart = " "
+  , cStartScreen = startScreen
+  , cEventPrevLevel = "p"
+  , cEventNextLevel = "n"
+  , cWinScreen = winScreen
+  }
 
 getAllInput :: IO String
 getAllInput = do
@@ -45,21 +34,15 @@ getAllInput = do
     else (c:) <$> getAllInput
 
 runActivity :: Activity Event Picture state -> IO ()
-runActivity (Activity state handle draw) = do
+runActivity activity = do
   hSetBuffering stdin NoBuffering
   hSetBuffering stdout NoBuffering
-  flip fix state $ \rec state -> do
+  flip fix (aStart activity) $ \rec state -> do
     putStr "\ESCc"
-    putStr (draw state)
+    putStr (aDraw activity state)
     event <- getAllInput
-    let newState = handle event state
+    let newState = aHandle activity event state
     rec newState
 
 main :: IO ()
-main = runActivity sokoban'
-  where
-    sokoban' =
-      resettable "\ESC" $
-      withStartScreen " " startScreen $
-      withUndo "u" $
-      sokoban
+main = runActivity $ sokoban' config

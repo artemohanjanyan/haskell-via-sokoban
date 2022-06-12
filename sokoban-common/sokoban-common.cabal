@@ -11,6 +11,7 @@ library
                     , Core
                     , List
                     , Mazes
+                    , Sokoban
                     , State
     build-depends:    base ^>=4.12.0.0
     ghc-options:      -Wall

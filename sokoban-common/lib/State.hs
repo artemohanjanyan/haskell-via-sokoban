@@ -2,14 +2,19 @@ module State where
 
 import Core
 import List
-import Mazes
 
 data State = State
   { sPosition :: Coord
   , sDirection :: Direction
   , sBoxes :: List Coord
-  , sCurrentLevel :: Integer
-  } deriving Eq
+  , sCurrentLevel :: Level
+  }
+
+instance Eq State where
+  (State p1 d1 b1 _) == (State p2 d2 b2 _) = p1 == p2 && d1 == d2 && b1 == b2
+
+sMaze :: State -> Maze
+sMaze = lMaze . sCurrentLevel
 
 initialBoxes :: Level -> List Coord
 initialBoxes level = traverseCoords $ \c ->
@@ -17,24 +22,19 @@ initialBoxes level = traverseCoords $ \c ->
     then Entry c Empty
     else Empty
 
-initialState :: Integer -> State
-initialState levelN = State
+initialState :: Level -> State
+initialState level = State
   { sPosition = lStart level
   , sDirection = U
   , sBoxes = initialBoxes level
-  , sCurrentLevel = levelN
+  , sCurrentLevel = level
   }
-  where
-    level = nth levels levelN
-
-stateMaze :: State -> Maze
-stateMaze state = lMaze (nth levels (sCurrentLevel state))
 
 movePlayer :: Direction -> State -> State
 movePlayer direction state =
   newState { sDirection = direction }
   where
-    maze = stateMaze state
+    maze = sMaze state
 
     isOk :: Tile -> Bool
     isOk Ground = True
@@ -60,13 +60,7 @@ movePlayer direction state =
 isLevelComplete :: State -> Bool
 isLevelComplete s = allList (mapList isOnStorage (sBoxes s))
   where
-    maze = stateMaze s
+    maze = sMaze s
 
     isOnStorage :: Coord -> Bool
     isOnStorage coord = maze coord == Storage
-
-nextLevel :: State -> Maybe State
-nextLevel state
-  | sCurrentLevel state < listLength levels =
-      Just (initialState (sCurrentLevel state + 1))
-  | otherwise = Nothing

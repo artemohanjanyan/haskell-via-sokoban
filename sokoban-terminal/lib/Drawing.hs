@@ -24,7 +24,7 @@ drawState state = unlines $ reverse $ lines $
     else if containsList c (sBoxes state)
       then box
     else
-      drawTile (noBoxMaze (stateMaze state) c)
+      drawTile (noBoxMaze (lMaze (sCurrentLevel state)) c)
 
 wall, ground, storage, box :: Picture
 wall = ['\129704', ' '] -- 🪨

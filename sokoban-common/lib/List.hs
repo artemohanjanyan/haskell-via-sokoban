@@ -30,7 +30,7 @@ containsList x (Entry y ys) = x == y || containsList x ys
 allList :: List Bool -> Bool
 allList = not . containsList False
 
-listLength :: List a -> Integer
+listLength :: List a -> Int
 listLength Empty = 0
 listLength (Entry _ xs) = 1 + listLength xs
 
@@ -38,7 +38,7 @@ filterList :: (a -> Bool) -> List a -> List a
 filterList _ Empty = Empty
 filterList p (Entry x xs) = (if p x then Entry x else id) (filterList p xs)
 
-nth :: List a -> Integer -> a
+nth :: List a -> Int -> a
 nth _ n | n < 1 = error "list index < 1"
 nth (Entry x _) 1 = x
 nth (Entry _ xs) n = nth xs (n - 1)

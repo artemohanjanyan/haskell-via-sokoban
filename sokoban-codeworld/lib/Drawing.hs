@@ -35,4 +35,4 @@ drawState :: State -> Picture
 drawState state =
   atCoord (sPosition state) (player (sDirection state)) &
   pictureOfBoxes (sBoxes state) &
-  pictureOfMaze (stateMaze state)
+  pictureOfMaze (lMaze $ sCurrentLevel state)
